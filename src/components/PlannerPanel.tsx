@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Itinerary } from "../types/trip";
 import ItineraryPanel from "./ItineraryPanel";
 import MapPanel from "./MapPanel";
+import ChatBubble from "./ChatBubble";
 
 const INTERESTS = [
   "Food",
@@ -15,13 +16,15 @@ const INTERESTS = [
 ];
 const DAYS = [1, 2, 3, 4, 5, 7];
 
-const PlannerPanel = () => {
+export default function PlannerPanel() {
   const [city, setCity] = useState("");
   const [days, setDays] = useState(3);
+  const [interests, setInterests] = useState<string[]>(["Food"]);
+  const [loading, setLoading] = useState(false);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const toggleInterest = (interest: string) => {
     setInterests((prev) =>
@@ -32,11 +35,11 @@ const PlannerPanel = () => {
   };
 
   const generateTrip = async () => {
-    if (!city.trim()) return setError("Please enter a city name");
-    if (!interests.length)
-      return setError("Please select at least one interest");
-    setError("");
+    if (!city.trim()) return setError("Please enter a city");
+    if (!interests.length) return setError("Select at least one interest");
+
     setLoading(true);
+    setError("");
 
     try {
       const res = await fetch("/api/generate-trip", {
@@ -44,122 +47,175 @@ const PlannerPanel = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ city, days, interests }),
       });
+
       const data = await res.json();
-      console.log(data);
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
+      if (!res.ok) throw new Error(data.error);
+
       setItinerary(data);
+
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
     } catch (err: any) {
-      setError(err.message || "Failed to generate itinerary");
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
-  const generateTripHandler = (e) => {
-    console.log("Key pressed:", e.key);
-    generateTrip();
-  };
 
   return (
-    <div className="grid grid-col-1 lg:grid-cols-[350px_1fr_350px] gap-3">
-      <div className="rounded-2xl p-5 bg-gradient-to-b from-violet-500 to-indigo-600 text-white flex flex-col gap-4 min-h-[520px]">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <div className="w-5 h-5 rounded-full bg-white/80" />
-          AI Travel Planner
-        </div>
-        <div className="text-center mt-2">
-          <h1 className="text-xl font-bold leading-snug">
+    <>
+      {/* Hero — tam sayfa form */}
+      <section className="min-h-[calc(100vh-60px)] flex flex-col items-center justify-center px-4 py-16">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">
             Plan your perfect trip
             <br />
-            with AI ✈
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500">
+              with AI ✈
+            </span>
           </h1>
-          <p className="text-xs text-white/75 mt-2">
+          <p className="text-gray-500 text-lg">
             Create personalized travel itineraries in seconds.
           </p>
         </div>
-        <input
-          type="text"
-          placeholder="Enter a city..."
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          onKeyDown={generateTripHandler}
-          className="bg-white/15 border border-white/30 rounded-xl px-4 py-2.5 text-sm placeholder-white/60 outline-none focus:bg-white/25 transition"
-        />
-        <select
-          value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
-          className="bg-white/15 border border-white/30 rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white/25 transition appearance-none cursor-pointer"
-        >
-          {DAYS.map((d) => (
-            <option key={d} value={d} className="text-gray-800">
-              {d} {d === 1 ? "Day" : "Days"}
-            </option>
-          ))}
-        </select>
-        <div>
-          <p className="text-xs text-white/75 mb-2">Interests</p>
-          <div className="flex flex-wrap gap-2">
-            {INTERESTS.map((interest) => (
-              <button
-                key={interest}
-                onClick={() => toggleInterest(interest)}
-                className={`px-3 py-1 rounded-full text-xs border transition ${
-                  interests.includes(interest)
-                    ? "bg-white text-indigo-600 border-white font-medium"
-                    : "bg-white/15 border-white/30 text-white"
-                }`}
-              >
-                {interest}
-              </button>
-            ))}
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-xl flex flex-col gap-5">
+          {/* City input */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+              Destination
+            </label>
+            <input
+              type="text"
+              placeholder="Enter a city..."
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && generateTrip()}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-50 transition"
+            />
           </div>
-        </div>
-        {error && (
-          <p className="text-xs text-red-200 bg-red-500/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
 
-        <button
-          onClick={generateTrip}
-          disabled={loading}
-          className="mt-auto bg-white text-indigo-600 font-medium rounded-xl py-3 text-sm hover:bg-white/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? "Generating..." : "Generate My Trip"}
-        </button>
+          {/* Days */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+              Duration
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {DAYS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDays(d)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                    days === d
+                      ? "bg-indigo-500 text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {d} {d === 1 ? "Day" : "Days"}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <p className="text-xs text-center text-white/60">
-          ⭐ 10,000+ AI generated trips
-        </p>
-      </div>
-      {itinerary ? (
-        <ItineraryPanel itinerary={itinerary} interests={interests} />
-      ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 flex items-center justify-center min-h-[520px]">
-          <div className="text-center text-gray-400">
-            <div className="text-5xl mb-4">🗺️</div>
-            <p className="text-sm">
-              {loading
-                ? "Creating your itinerary..."
-                : "Your itinerary will appear here"}
+          {/* Interests */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">
+              Interests
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {INTERESTS.map((interest) => (
+                <button
+                  key={interest}
+                  onClick={() => toggleInterest(interest)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                    interests.includes(interest)
+                      ? "bg-indigo-500 text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {interest}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-2">
+              {error}
             </p>
-          </div>
+          )}
+
+          <button
+            onClick={generateTrip}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 text-white font-medium rounded-xl py-3.5 text-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="animate-spin w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="white"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="white"
+                    d="M4 12a8 8 0 018-8v8z"
+                  />
+                </svg>
+                Generating your trip...
+              </span>
+            ) : (
+              "Generate My Trip ✈"
+            )}
+          </button>
+
+          <p className="text-xs text-center text-gray-400">
+            ⭐ 10,000+ AI generated trips
+          </p>
         </div>
+      </section>
+
+      {/* Results — scroll hedefi */}
+      {itinerary && (
+        <section ref={resultsRef} className="px-4 md:px-8 pb-16 scroll-mt-4">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500" />
+            <h2 className="text-xl font-medium text-gray-800">
+              {itinerary.city} — {itinerary.days.length} Day Itinerary
+            </h2>
+            <button
+              onClick={() => {
+                setItinerary(null);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="ml-auto text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 transition"
+            >
+              ← New Trip
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ItineraryPanel itinerary={itinerary} interests={interests} />
+            <MapPanel itinerary={itinerary} />
+          </div>
+        </section>
       )}
 
-      {itinerary ? (
-        <MapPanel itinerary={itinerary} />
-      ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 flex items-center justify-center min-h-[520px]">
-          <div className="text-center text-gray-400">
-            <div className="text-5xl mb-4">📍</div>
-            <p className="text-sm">Map will appear here</p>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Fixed chat bubble */}
+      <ChatBubble city={city} />
+    </>
   );
-};
-
-export default PlannerPanel;
+}
