@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { Itinerary } from "../types/trip";
+import ChatBubble from "./ChatBubble";
+import { useCityPhoto } from "../hooks/useCityPhoto";
 import ItineraryPanel from "./ItineraryPanel";
 import MapPanel from "./MapPanel";
-import ChatBubble from "./ChatBubble";
 
 const INTERESTS = [
   "Food",
@@ -66,25 +67,66 @@ export default function PlannerPanel() {
     }
   };
 
+  const { photo } = useCityPhoto(city);
+
   return (
     <>
-      {/* Hero — tam sayfa form */}
-      <section className="min-h-[calc(100vh-60px)] flex flex-col items-center justify-center px-4 py-16">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">
+      <section
+        className="min-h-[calc(100vh-60px)] flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden transition-all duration-700"
+        style={
+          photo
+            ? {
+                backgroundImage: `url(${photo.url})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {}
+        }
+      >
+        {photo && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+        )}
+        {photo && (
+          <a
+            href={photo.credit.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute bottom-4 right-4 text-xs text-white/50 hover:text-white/80 transition z-10"
+          >
+            Photo by {photo.credit.name} · Unsplash
+          </a>
+        )}
+
+        <div className="relative z-10 text-center mb-10">
+          <h1
+            className={`text-4xl md:text-5xl font-bold mb-4 leading-tight transition-colors duration-500 ${
+              photo ? "text-white" : "text-gray-800"
+            }`}
+          >
             Plan your perfect trip
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500">
+            <span
+              className={
+                photo
+                  ? "text-white drop-shadow-lg"
+                  : "text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500"
+              }
+            >
               with AI ✈
             </span>
           </h1>
-          <p className="text-gray-500 text-lg">
+          <p
+            className={`text-lg transition-colors duration-500 ${
+              photo ? "text-white/80" : "text-gray-500"
+            }`}
+          >
             Create personalized travel itineraries in seconds.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-xl flex flex-col gap-5">
-          {/* City input */}
+        <div className="relative z-10 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-xl flex flex-col gap-5">
+          {/* Geri kalan form içeriği — değişmeden kalıyor */}
+
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">
               Destination
@@ -99,7 +141,6 @@ export default function PlannerPanel() {
             />
           </div>
 
-          {/* Days */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">
               Duration
@@ -121,7 +162,6 @@ export default function PlannerPanel() {
             </div>
           </div>
 
-          {/* Interests */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">
               Interests
@@ -187,15 +227,9 @@ export default function PlannerPanel() {
           </p>
         </div>
       </section>
-
-      {/* Results — scroll hedefi */}
       {itinerary && (
         <section ref={resultsRef} className="px-4 md:px-8 pb-16 scroll-mt-4">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500" />
-            <h2 className="text-xl font-medium text-gray-800">
-              {itinerary.city} — {itinerary.days.length} Day Itinerary
-            </h2>
             <button
               onClick={() => {
                 setItinerary(null);
@@ -213,8 +247,6 @@ export default function PlannerPanel() {
           </div>
         </section>
       )}
-
-      {/* Fixed chat bubble */}
       <ChatBubble city={city} />
     </>
   );
