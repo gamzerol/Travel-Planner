@@ -7,6 +7,9 @@ import { useCityPhoto } from "../hooks/useCityPhoto";
 import ItineraryPanel from "./ItineraryPanel";
 import MapPanel from "./MapPanel";
 
+import { useWeather } from "../hooks/useWeather";
+import WeatherStrip from "./WeatherStrip";
+
 const INTERESTS = [
   "Food",
   "Museums",
@@ -68,6 +71,7 @@ export default function PlannerPanel() {
   };
 
   const { photo } = useCityPhoto(city);
+  const { weather } = useWeather(city);
 
   return (
     <>
@@ -247,6 +251,7 @@ export default function PlannerPanel() {
           </div>
         </section>
       )}
+      {weather && <WeatherStrip weather={weather} tripDays={days} />}
       <ChatBubble city={city} />
     </>
   );
