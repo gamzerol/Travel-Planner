@@ -12,9 +12,18 @@ const TIME_SLOTS = [
 interface Props {
   itinerary: Itinerary;
   interests: string[];
+  onSave?: () => void;
+  saved?: boolean;
+  canSave?: boolean;
 }
 
-const ItineraryPanel = ({ itinerary, interests }: Props) => {
+const ItineraryPanel = ({
+  itinerary,
+  interests,
+  onSave,
+  saved,
+  canSave,
+}: Props) => {
   const [activeDay, setActiveDay] = useState(0);
   const day: Day = itinerary.days[activeDay];
 
@@ -79,8 +88,18 @@ const ItineraryPanel = ({ itinerary, interests }: Props) => {
       </div>
       {/* Footer */}
       <div className="flex gap-2 pt-2 border-t border-gray-50">
-        <button className="flex items-center gap-2 bg-indigo-500 text-white rounded-xl px-4 py-2.5 text-xs font-medium hover:bg-indigo-600 transition">
-          Save Itinerary
+        <button
+          onClick={onSave}
+          disabled={saved || !canSave}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium transition ${
+            saved
+              ? "bg-green-50 text-green-600 border border-green-100"
+              : canSave
+                ? "bg-indigo-500 text-white hover:bg-indigo-600"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          {saved ? "✓ Saved!" : canSave ? "Save Itinerary" : "Sign in to save"}
         </button>
         <button className="flex items-center gap-2 bg-indigo-50 text-indigo-500 border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-medium hover:bg-indigo-100 transition">
           Ask Travel Assistant

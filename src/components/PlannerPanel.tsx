@@ -10,6 +10,9 @@ import MapPanel from "./MapPanel";
 import { useWeather } from "../hooks/useWeather";
 import WeatherStrip from "./WeatherStrip";
 
+import { useSavedTrips } from "../hooks/useSavedTrip";
+import { useAuth } from "../hooks/useAuth";
+
 const INTERESTS = [
   "Food",
   "Museums",
@@ -28,6 +31,10 @@ export default function PlannerPanel() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [error, setError] = useState("");
 
+  const { user } = useAuth();
+  const { trips, saveTrip, deleteTrip } = useSavedTrips(user?.id);
+  const [saved, setSaved] = useState(false);
+
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const toggleInterest = (interest: string) => {
@@ -36,6 +43,12 @@ export default function PlannerPanel() {
         ? prev.filter((i) => i !== interest)
         : [...prev, interest],
     );
+  };
+
+  const handleSave = async () => {
+    if (!itinerary || !user) return;
+    const success = await saveTrip(city, days, interests, itinerary);
+    if (success) setSaved(true);
   };
 
   const generateTrip = async () => {
@@ -246,7 +259,13 @@ export default function PlannerPanel() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ItineraryPanel itinerary={itinerary} interests={interests} />
+            <ItineraryPanel
+              itinerary={itinerary}
+              interests={interests}
+              onSave={handleSave}
+              saved={saved}
+              canSave={!!user}
+            />
             <MapPanel itinerary={itinerary} />
           </div>
         </section>
