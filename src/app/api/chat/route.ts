@@ -1,6 +1,6 @@
 import { groq } from "@/src/lib/groq";
 import { NextResponse } from "next/server";
-
+export const runtime = "nodejs";
 export async function POST(req: Request) {
   try {
     const { messages, city } = await req.json();
