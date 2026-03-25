@@ -2,7 +2,7 @@
 
 A full-stack AI-powered travel itinerary generator. Enter a city, select your interests, and get a personalized day-by-day travel plan with an interactive map, weather forecast, and a built-in travel assistant.
 
-**Live demo:** [your-app.vercel.app](https://travel-planner-kappa-ten.vercel.app)
+**Live demo:** [travel-planner-kappa-ten.vercel.app](https://travel-planner-kappa-ten.vercel.app)
 
 ![AI Travel Planner](./public/project-photo.png)
 
