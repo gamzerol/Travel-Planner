@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Day, Itinerary } from "../types/trip";
+import { usePDF } from "../hooks/usePDF";
+import { WeatherDay } from "../hooks/useWeather";
 
 const TIME_SLOTS = [
   { key: "morning", label: "Morning", icon: "🌤" },
@@ -15,6 +17,7 @@ interface Props {
   onSave?: () => void;
   saved?: boolean;
   canSave?: boolean;
+  weatherDays?: WeatherDay[];
 }
 
 const ItineraryPanel = ({
@@ -23,9 +26,11 @@ const ItineraryPanel = ({
   onSave,
   saved,
   canSave,
+  weatherDays,
 }: Props) => {
   const [activeDay, setActiveDay] = useState(0);
   const day: Day = itinerary.days[activeDay];
+  const { downloadPDF } = usePDF();
 
   return (
     <div className="rounded-2xl bg-white border border-gray-100 p-5 flex flex-col gap-4 min-h-[520px]">
@@ -100,6 +105,21 @@ const ItineraryPanel = ({
           }`}
         >
           {saved ? "✓ Saved!" : canSave ? "Save Itinerary" : "Sign in to save"}
+        </button>
+        <button
+          onClick={() => downloadPDF(itinerary, interests, weatherDays)}
+          className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 rounded-xl px-4 py-2.5 text-xs font-medium transition"
+        >
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 2v8M5 7l3 3 3-3M3 13h10"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Download PDF
         </button>
         <button className="flex items-center gap-2 bg-indigo-50 text-indigo-500 border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-medium hover:bg-indigo-100 transition">
           Ask Travel Assistant

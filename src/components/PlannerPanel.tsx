@@ -265,6 +265,7 @@ export default function PlannerPanel() {
               onSave={handleSave}
               saved={saved}
               canSave={!!user}
+              weatherDays={weather?.days}
             />
             <MapPanel itinerary={itinerary} />
           </div>
